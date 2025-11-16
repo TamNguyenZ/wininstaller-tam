@@ -1,6 +1,24 @@
 #!/bin/bash
 set -e
 
+# Thử apt update xem có root không
+(apt update -y &>/tmp/apt_err && echo "OK:  ✅có root ✅") \
+|| (
+    echo "⚠️ root bị denied, thử dùng sudo..." ;
+
+    # Thử sudo không hỏi password
+    (sudo -n apt update -y &>/tmp/sudo_err && echo "OK: ✅sudo phù hợp có root ✅") \
+    || {
+        echo "❌ Không có root hoặc sudo → tiến hành cài freeroot";
+        
+        # Clone và chạy freeroot
+        git clone https://github.com/foxytouxxx/freeroot.git
+        cd freeroot && bash root.sh
+        
+        exit 0
+    }
+)
+
 echo "=== 🧹 Fix APT lỗi cnf-update-db ==="
 
 # B1: Sửa quyền folder
