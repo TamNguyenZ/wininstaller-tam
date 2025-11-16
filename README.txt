@@ -1,7 +1,8 @@
 -💻-
 WIN-INSTALLER-BY-TAM
-VERSION:2.0
+VERSION:2.1
 New Features
+✅ WinInstaller now available without root
 ✅ Auto Enable RDP 
 ✅ Skip Windows Setup
 ✅ Tunnel TCP 3389 Supported
