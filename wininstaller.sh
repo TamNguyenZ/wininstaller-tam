@@ -1,37 +1,27 @@
 #!/bin/bash
 set -e
 
-# Thử apt update xem có root không
-(apt update -y &>/tmp/apt_err && echo "OK:  ✅có root ✅") \
-|| (
-    echo "⚠️ root bị denied, thử dùng sudo..." ;
+#!/bin/bash
 
-    # Thử sudo không hỏi password
-    (sudo -n apt update -y &>/tmp/sudo_err && echo "OK: ✅sudo phù hợp có root ✅") \
-    || {
-        echo "❌ Không có root hoặc sudo → tiến hành cài freeroot";
-        
-        # Clone và chạy freeroot
+# Kiểm tra có đang là root thật không
+if [ "$EUID" -eq 0 ]; then
+    echo "OK: ✅ Đang chạy với quyền root"
+else
+    echo "⚠️ Không phải root → kiểm tra sudo..."
+
+    # Kiểm tra sudo không cần password
+    if sudo -n true 2>/dev/null; then
+        echo "OK: ✅ Có sudo không cần password (đủ quyền root)"
+    else
+        echo "❌ Không có root hoặc sudo → tiến hành cài freeroot"
+
         git clone https://github.com/foxytouxxx/freeroot.git
         cd freeroot && bash root.sh
-        
-        exit 0
-    }
-)
-
-echo "=== 🧹 Fix APT lỗi cnf-update-db ==="
-
-# B1: Sửa quyền folder
-sudo mkdir -p /var/lib/command-not-found
-sudo chmod 755 /var/lib/command-not-found || true
-
-# B2: Cài lại command-not-found
-sudo apt --reinstall install -y command-not-found || true
-
-# B3: Nếu script hỏng thì xóa nó
-if [ -f /usr/lib/cnf-update-db ]; then
-    sudo rm -f /usr/lib/cnf-update-db || true
+    fi
 fi
+
+# Chỗ này không có exit → script sẽ tiếp tục chạy các lệnh bên dưới
+echo "=== Script vẫn tiếp tục chạy bình thường ==="
 
 echo "=== ✅ APT đã fix xong ==="
 sleep 1
