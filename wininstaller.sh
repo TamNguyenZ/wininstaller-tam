@@ -39,7 +39,9 @@ else
     echo "=== 🧰 Cài dependency build Python ==="
     sudo apt update
     sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev \
-    libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget
+    libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget \
+    xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev \
+    libxml2-dev libxslt1-dev
 
     echo "=== 📦 Tải và giải nén Python 3.12.0 ==="
     rm -rf Python-3.12.0 Python-3.12.0.tgz
@@ -67,3 +69,7 @@ pip3.12 install requests
 echo "=== 🎉 DONE! Python 3.12 + pip + requests đã sẵn sàng ==="
 python3.12 --version
 pip3.12 --version
+
+echo "=== ➕ Cài thêm thư viện hệ thống (xz, lzma, v.v.) ==="
+sudo apt update
+sudo apt install -y xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev libxml2-dev libxslt1-dev
