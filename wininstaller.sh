@@ -1,83 +1,82 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-#!/bin/bash
-
-# Kiểm tra có đang là root thật không
+# ==========================
+#  CHECK ROOT / FREEROOT
+# ==========================
 if [ "$EUID" -eq 0 ]; then
     echo "OK: ✅ Đang chạy với quyền root"
 else
     echo "⚠️ Không phải root → kiểm tra sudo..."
-
-    # Kiểm tra sudo không cần password
     if sudo -n true 2>/dev/null; then
         echo "OK: ✅ Có sudo không cần password (đủ quyền root)"
     else
         echo "❌ Không có root hoặc sudo → tiến hành cài freeroot"
-
         git clone https://github.com/foxytouxxx/freeroot.git
         cd freeroot && bash root.sh
     fi
 fi
 
-# Chỗ này không có exit → script sẽ tiếp tục chạy các lệnh bên dưới
-echo "=== Script vẫn tiếp tục chạy bình thường ==="
-
 echo "=== ✅ APT đã fix xong ==="
 sleep 1
 
+# ==========================
+# CONFIG PYTHON 3.12
+# ==========================
+PYTHON_VER="3.12.0"
+PYTHON_PREFIX="$HOME/python3.12"
+VENV_DIR="$HOME/py312-env"
 
 # ==========================
-#   CHECK PYTHON 3.12
+# INSTALL BUILD DEPENDENCIES
 # ==========================
+sudo apt update -y
+sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev \
+libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget \
+xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev \
+libxml2-dev libxslt1-dev
 
-if command -v python3.12 &>/dev/null; then
-    echo "=== 🔍 Python 3.12 đã tồn tại, bỏ qua bước build ==="
-    python3.12 --version
-
-    # nếu pip thiếu thì cài lại ensurepip
-    if ! command -v pip3.12 &>/dev/null; then
-        echo "=== ⚠️ Thiếu pip3.12 → cài ensurepip ==="
-        python3.12 -m ensurepip --upgrade
-    fi
-
-else
+# ==========================
+# BUILD PYTHON 3.12 IF NEEDED
+# ==========================
+if [ ! -x "$PYTHON_PREFIX/bin/python3.12" ]; then
     echo "=== ❌ Chưa có Python 3.12 → tiến hành build từ source ==="
 
-    echo "=== 🧰 Cài dependency build Python ==="
-    sudo apt update
-    sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev \
-    libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget \
-    xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev \
-    libxml2-dev libxslt1-dev
+    rm -rf "Python-$PYTHON_VER" "Python-$PYTHON_VER.tgz"
+    wget "https://www.python.org/ftp/python/$PYTHON_VER/Python-$PYTHON_VER.tgz"
+    tar -xf "Python-$PYTHON_VER.tgz"
+    cd "Python-$PYTHON_VER"
 
-    echo "=== 📦 Tải và giải nén Python 3.12.0 ==="
-    rm -rf Python-3.12.0 Python-3.12.0.tgz
-    wget https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz
-    tar -xvf Python-3.12.0.tgz
-    cd Python-3.12.0
-
-    echo "=== ⚙️ Build Python 3.12.0 ==="
-    ./configure --enable-optimizations --with-ensurepip=install
+    ./configure --prefix="$PYTHON_PREFIX" --enable-optimizations --with-ensurepip=install
     make -j$(nproc)
-    sudo make altinstall
-
-    echo "=== 🔗 update-alternatives ==="
-    sudo update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.12 1
-    sudo update-alternatives --install /usr/bin/pip pip /usr/local/bin/pip3.12 1
-    sudo update-alternatives --install /usr/bin/pip3 pip3 /usr/local/bin/pip3.12 1
-
+    make install
+else
+    echo "=== 🔍 Python 3.12 đã tồn tại, bỏ qua build ==="
 fi
 
+# ==========================
+# CREATE VENV
+# ==========================
+rm -rf "$VENV_DIR"
+"$PYTHON_PREFIX/bin/python3.12" -m venv "$VENV_DIR"
 
-echo "=== 📥 Đảm bảo requests đã được cài ==="
-pip3.12 install -U pip setuptools wheel
-pip3.12 install requests
+# ACTIVATE VENV
+source "$VENV_DIR/bin/activate"
 
-echo "=== 🎉 DONE! Python 3.12 + pip + requests đã sẵn sàng ==="
-python3.12 --version
-pip3.12 --version
+# ==========================
+# UPGRADE PIP + INSTALL REQUESTS
+# ==========================
+pip install --upgrade pip setuptools wheel tomli markdown packaging requests
 
-echo "=== ➕ Cài thêm thư viện hệ thống (xz, lzma, v.v.) ==="
-sudo apt update
+echo "✅ Python 3.12 + pip + requests sẵn sàng trong venv: $VENV_DIR"
+python --version
+pip --version
+
+echo "💡 Để dùng Python này, chạy:"
+echo "   source $VENV_DIR/bin/activate"
+
+# ==========================
+# CÀI THÊM HỆ THỐNG LIBS
+# ==========================
+sudo apt update -y
 sudo apt install -y xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev libxml2-dev libxslt1-dev
