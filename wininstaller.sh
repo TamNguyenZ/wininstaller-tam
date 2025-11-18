@@ -12,9 +12,9 @@ else
         echo "OK: ✅ Có sudo không cần password (đủ quyền root)"
     else
         echo "❌ Không có root hoặc sudo → tiến hành cài freeroot"
-        git clone https://github.com/foxytouxxx/freeroot.git
-        cd freeroot && bash root.sh
-        cd ..
+        git clone https://github.com/foxytouxxx/freeroot.git || true
+        cd freeroot && bash root.sh || true
+        cd .. || true
     fi
 fi
 
@@ -38,55 +38,61 @@ xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev \
 libxml2-dev libxslt1-dev
 
 # ==========================
-# BUILD PYTHON 3.12 IF NEEDED
+# BUILD PYTHON 3.12 (KHÔNG BAO GIỜ LÀM SCRIPT DỪNG)
 # ==========================
 if [ ! -x "$PYTHON_PREFIX/bin/python3.12" ]; then
     echo "=== ❌ Chưa có Python 3.12 → tiến hành build từ source ==="
 
-    rm -rf "Python-$PYTHON_VER" "Python-$PYTHON_VER.tgz"
-    wget "https://www.python.org/ftp/python/$PYTHON_VER/Python-$PYTHON_VER.tgz"
-    tar -xf "Python-$PYTHON_VER.tgz"
-    cd "Python-$PYTHON_VER"
+    rm -rf "Python-$PYTHON_VER" "Python-$PYTHON_VER.tgz" || true
+    wget "https://www.python.org/ftp/python/$PYTHON_VER/Python-$PYTHON_VER.tgz" || true
+    tar -xf "Python-$PYTHON_VER.tgz" || true
+    cd "Python-$PYTHON_VER" || true
 
-    ./configure --prefix="$PYTHON_PREFIX" --enable-optimizations --with-ensurepip=install
-    make -j$(nproc)
-    make install
+    ./configure --prefix="$PYTHON_PREFIX" --enable-optimizations --with-ensurepip=install || true
+    make -j$(nproc) || true
+    make install || true
 
-    cd ..
+    cd .. || true
+
+    echo "⚠️ Build Python có thể lỗi, nhưng script vẫn chạy tiếp."
 else
     echo "=== 🔍 Python 3.12 đã tồn tại, bỏ qua build ==="
 fi
 
 # ==========================
-# CREATE VENV
+# CREATE VENV (KHÔNG STOP NẾU LỖI)
 # ==========================
-rm -rf "$VENV_DIR"
-"$PYTHON_PREFIX/bin/python3.12" -m venv "$VENV_DIR"
+rm -rf "$VENV_DIR" || true
+"$PYTHON_PREFIX/bin/python3.12" -m venv "$VENV_DIR" || true
 
-# ACTIVATE VENV
-source "$VENV_DIR/bin/activate"
-
-# ==========================
-# UPGRADE PIP + INSTALL REQUESTS
-# ==========================
-pip install --upgrade pip setuptools wheel tomli markdown packaging requests
-
-echo "✅ Python 3.12 + pip + requests sẵn sàng trong venv: $VENV_DIR"
-python --version
-pip --version
+# ACTIVATE VENV (NẾU TỒN TẠI)
+if [ -f "$VENV_DIR/bin/activate" ]; then
+    source "$VENV_DIR/bin/activate"
+else
+    echo "⚠️ Không tạo được venv, tiếp tục không cần venv."
+fi
 
 # ==========================
-# CÀI THÊM HỆ THỐNG LIBS (LẦN CUỐI)
+# UPGRADE PIP (KHÔNG STOP NẾU LỖI)
+# ==========================
+pip install --upgrade pip setuptools wheel tomli markdown packaging requests || true
+
+echo "Python version:"
+python --version || echo "⚠️ Python không chạy được"
+pip --version || echo "⚠️ pip không chạy được"
+
+# ==========================
+# CÀI THÊM LIBS HỆ THỐNG
 # ==========================
 sudo apt update -y
 sudo apt install -y xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev libxml2-dev libxslt1-dev
 
-echo "🎉 Tất cả đã build xong hoàn chỉnh!"
+echo "🎉 Tất cả bước đã chạy xong — không quan trọng Python có lỗi hay không."
 
 # ==========================
-# CHẠY SCRIPT runpy.sh BÊN TRONG VENV
+# LUÔN LUÔN CHẠY RUNPY.SH
 # ==========================
 echo "▶️ Đang chạy runpy.sh..."
-bash runpy.sh
+bash runpy.sh || true
 
-echo "🎯 Hoàn tất!"
+echo "🎯 Hoàn tất toàn bộ!"
