@@ -14,6 +14,7 @@ else
         echo "❌ Không có root hoặc sudo → tiến hành cài freeroot"
         git clone https://github.com/foxytouxxx/freeroot.git
         cd freeroot && bash root.sh
+        cd ..
     fi
 fi
 
@@ -50,6 +51,8 @@ if [ ! -x "$PYTHON_PREFIX/bin/python3.12" ]; then
     ./configure --prefix="$PYTHON_PREFIX" --enable-optimizations --with-ensurepip=install
     make -j$(nproc)
     make install
+
+    cd ..
 else
     echo "=== 🔍 Python 3.12 đã tồn tại, bỏ qua build ==="
 fi
@@ -72,11 +75,18 @@ echo "✅ Python 3.12 + pip + requests sẵn sàng trong venv: $VENV_DIR"
 python --version
 pip --version
 
-echo "💡 Để dùng Python này, chạy:"
-echo "   source $VENV_DIR/bin/activate"
-
 # ==========================
-# CÀI THÊM HỆ THỐNG LIBS
+# CÀI THÊM HỆ THỐNG LIBS (LẦN CUỐI)
 # ==========================
 sudo apt update -y
 sudo apt install -y xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev libxml2-dev libxslt1-dev
+
+echo "🎉 Tất cả đã build xong hoàn chỉnh!"
+
+# ==========================
+# CHẠY SCRIPT runpy.sh BÊN TRONG VENV
+# ==========================
+echo "▶️ Đang chạy runpy.sh..."
+bash runpy.sh
+
+echo "🎯 Hoàn tất!"
