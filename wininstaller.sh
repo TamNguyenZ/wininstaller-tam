@@ -35,7 +35,7 @@ sudo apt update -y
 sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev \
 libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget \
 xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev \
-libxml2-dev libxslt1-dev
+libxml2-dev libxslt1-dev || true
 
 # ==========================
 # BUILD PYTHON 3.12 (KHÔNG BAO GIỜ LÀM SCRIPT DỪNG)
@@ -85,7 +85,7 @@ pip --version || echo "⚠️ pip không chạy được"
 # CÀI THÊM LIBS HỆ THỐNG
 # ==========================
 sudo apt update -y
-sudo apt install -y xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev libxml2-dev libxslt1-dev
+sudo apt install -y xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev libxml2-dev libxslt1-dev || true
 
 echo "🎉 Tất cả bước đã chạy xong — không quan trọng Python có lỗi hay không."
 
