@@ -2,43 +2,69 @@
 set -euo pipefail
 
 # ==========================
-# CÀI DEPENDENCIES
+# CHECK ROOT / FREEROOT
 # ==========================
-sudo apt update -y
-sudo apt install -y git build-essential libssl-dev zlib1g-dev \
-libncurses5-dev libffi-dev libsqlite3-dev libreadline-dev \
-libbz2-dev liblzma-dev tk-dev libgdbm-dev curl wget
+if [ "$EUID" -eq 0 ]; then
+    echo "✅ Running as root"
+else
+    echo "⚠️ Not root, checking sudo..."
+    if sudo -n true 2>/dev/null; then
+        echo "✅ Sudo OK"
+    else
+        echo "❌ Installing freeroot..."
+        git clone https://github.com/foxytouxxx/freeroot.git || true
+        cd freeroot && bash root.sh || true
+        cd ..
+    fi
+fi
 
 # ==========================
-# CÀI PYENV
+# PYTHON 3.12 SETUP
 # ==========================
-curl https://pyenv.run | bash
+PY_VER=3.12.2
+PY_PREFIX="$HOME/python312"
+VENV_DIR="$HOME/py312-env"
+
+if [ ! -x "$PY_PREFIX/bin/python3.12" ]; then
+    echo "🔨 Building Python $PY_VER..."
+    rm -rf Python-$PY_VER Python-$PY_VER.tgz
+    wget https://www.python.org/ftp/python/$PY_VER/Python-$PY_VER.tgz
+    tar -xf Python-$PY_VER.tgz
+    cd Python-$PY_VER
+    ./configure --prefix="$PY_PREFIX" --enable-optimizations --with-ensurepip=install --enable-shared
+    make -j$(nproc)
+    make install
+    cd ..
+else
+    echo "✔ Python $PY_VER already exists, skip build"
+fi
 
 # ==========================
-# NẠP PYENV
+# EXPORT PATH + LD_LIBRARY_PATH
 # ==========================
-export PATH="$HOME/.pyenv/bin:$PATH"
-eval "$(pyenv init --path)"
-eval "$(pyenv init -)"
+export PATH="$PY_PREFIX/bin:$PATH"
+export LD_LIBRARY_PATH="$PY_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+"$PY_PREFIX/bin/python3.12" --version
 
 # ==========================
-# CÀI PYTHON 3.12.2
+# CREATE VENV + MODULES
 # ==========================
-pyenv install -s 3.12.2
-pyenv global 3.12.2
+rm -rf "$VENV_DIR"
+"$PY_PREFIX/bin/python3.12" -m venv "$VENV_DIR"
+source "$VENV_DIR/bin/activate"
+
+pip install --upgrade pip setuptools wheel
+pip install tomli requests[security] urllib3 certifi idna charset_normalizer markdown packaging
 
 # ==========================
-# KIỂM TRA
-# ==========================
-python --version
-python -m pip install --upgrade pip
-python -m pip install requests tomli tomli_w
-
-# ==========================
-# CHẠY FILE WIN.PY
+# RUN win.py
 # ==========================
 if [ -f "win.py" ]; then
-    python win.py
+    echo "▶ Running win.py with Python 3.12 venv..."
+    python3.12 win.py
 else
-    echo "❌ Không tìm thấy win.py"
+    echo "❌ Cannot find win.py"
 fi
+
+echo "✅ Done!"
