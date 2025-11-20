@@ -2,69 +2,64 @@
 set -euo pipefail
 
 # ==========================
-# CHECK ROOT / FREEROOT
+# INSTALL DEPENDENCIES
 # ==========================
-if [ "$EUID" -eq 0 ]; then
-    echo "✅ Running as root"
-else
-    echo "⚠️ Not root, checking sudo..."
-    if sudo -n true 2>/dev/null; then
-        echo "✅ Sudo OK"
-    else
-        echo "❌ Installing freeroot..."
-        git clone https://github.com/foxytouxxx/freeroot.git || true
-        cd freeroot && bash root.sh || true
-        cd ..
-    fi
+sudo apt update -y
+sudo apt install -y git build-essential libssl-dev zlib1g-dev \
+libncurses5-dev libffi-dev libsqlite3-dev libreadline-dev \
+libbz2-dev liblzma-dev tk-dev libgdbm-dev curl
+
+# ==========================
+# INSTALL PYENV
+# ==========================
+if [ ! -d "$HOME/.pyenv" ]; then
+    curl https://pyenv.run | bash
 fi
 
-# ==========================
-# PYTHON 3.12 SETUP
-# ==========================
-PY_VER=3.12.2
-PY_PREFIX="$HOME/python312"
-VENV_DIR="$HOME/py312-env"
-
-if [ ! -x "$PY_PREFIX/bin/python3.12" ]; then
-    echo "🔨 Building Python $PY_VER..."
-    rm -rf Python-$PY_VER Python-$PY_VER.tgz
-    wget https://www.python.org/ftp/python/$PY_VER/Python-$PY_VER.tgz
-    tar -xf Python-$PY_VER.tgz
-    cd Python-$PY_VER
-    ./configure --prefix="$PY_PREFIX" --enable-optimizations --with-ensurepip=install --enable-shared
-    make -j$(nproc)
-    make install
-    cd ..
-else
-    echo "✔ Python $PY_VER already exists, skip build"
-fi
+export PATH="$HOME/.pyenv/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
 
 # ==========================
-# EXPORT PATH + LD_LIBRARY_PATH
+# INSTALL PYTHON 3.10 + 3.12
 # ==========================
-export PATH="$PY_PREFIX/bin:$PATH"
-export LD_LIBRARY_PATH="$PY_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-
-"$PY_PREFIX/bin/python3.12" --version
+pyenv install -s 3.10.13
+pyenv install -s 3.12.2
 
 # ==========================
-# CREATE VENV + MODULES
+# CREATE VENV FOR BOTH
 # ==========================
-rm -rf "$VENV_DIR"
-"$PY_PREFIX/bin/python3.12" -m venv "$VENV_DIR"
-source "$VENV_DIR/bin/activate"
+PYTHON10_PATH="$(pyenv prefix 3.10.13)/bin/python3.10"
+PYTHON12_PATH="$(pyenv prefix 3.12.2)/bin/python3.12"
 
+PYTHON10_VENV="$HOME/py310-env"
+PYTHON12_VENV="$HOME/py312-env"
+
+rm -rf "$PYTHON10_VENV" "$PYTHON12_VENV"
+
+$PYTHON10_PATH -m venv "$PYTHON10_VENV"
+$PYTHON12_PATH -m venv "$PYTHON12_VENV"
+
+# ==========================
+# INSTALL REQUESTS FULL
+# ==========================
+source "$PYTHON10_VENV/bin/activate"
 pip install --upgrade pip setuptools wheel
-pip install tomli requests[security] urllib3 certifi idna charset_normalizer markdown packaging
+pip install "requests[security]" urllib3 certifi idna charset_normalizer tomli
+deactivate
+
+source "$PYTHON12_VENV/bin/activate"
+pip install --upgrade pip setuptools wheel
+pip install "requests[security]" urllib3 certifi idna charset_normalizer tomli
+deactivate
 
 # ==========================
-# RUN win.py
+# RUN WIN.PY USING PYTHON 3.12
 # ==========================
 if [ -f "win.py" ]; then
-    echo "▶ Running win.py with Python 3.12 venv..."
-    python3.12 win.py
+    echo "▶ Running win.py using Python 3.12 venv..."
+    source "$PYTHON12_VENV/bin/activate"
+    python win.py
 else
-    echo "❌ Cannot find win.py"
+    echo "❌ win.py not found"
 fi
-
-echo "✅ Done!"
