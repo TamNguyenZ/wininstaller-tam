@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -e -u -o errexit
 
 # ==========================
 #  CHECK ROOT / FREEROOT
