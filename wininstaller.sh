@@ -21,7 +21,6 @@ fi
 echo "=== ✅ CHECK ROOT DONE ==="
 sleep 1
 
-
 # ==========================
 # CONFIG PYTHON 3.12
 # ==========================
@@ -65,7 +64,7 @@ else
 fi
 
 # ==========================
-# EXPORT PATH CHUẨN
+# EXPORT PATH + LIB
 # ==========================
 export PATH="$PYTHON_PREFIX/bin:$PATH"
 export LD_LIBRARY_PATH="$PYTHON_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
@@ -77,19 +76,23 @@ export LD_LIBRARY_PATH="$PYTHON_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 # ==========================
 rm -rf "$VENV_DIR" || true
 "$PYTHON_PREFIX/bin/python3.12" -m venv "$VENV_DIR"
-
 source "$VENV_DIR/bin/activate"
 
 # ==========================
-# INSTALL REQUESTS FULL
+# INSTALL REQUIRED MODULES
 # ==========================
 pip install --upgrade pip setuptools wheel
+
+# FULL REQUESTS
 pip install "requests[security]" urllib3 certifi idna charset_normalizer
 
-echo "📦 requests version:"
+# FIX: tomli REQUIRED FOR QEMU
+pip install tomli tomli_w
+
+echo "📦 Check tomli:"
 python3 - <<EOF
-import requests
-print("Requests:", requests.__version__)
+import tomli
+print("tomli OK:", tomli.__version__)
 EOF
 
 # ==========================
@@ -107,4 +110,4 @@ chmod +x runpy.sh
 echo "⚡ Updated runpy.sh để luôn chạy Python 3.12."
 fi
 
-echo "🎯 DONE – Python 3.12 + venv + requests FULL READY!"
+echo "🎯 DONE – Python 3.12 + venv + requests + tomli FULL READY!"
