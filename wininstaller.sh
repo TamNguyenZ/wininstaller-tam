@@ -22,13 +22,18 @@ echo "=== ✅ CHECK ROOT DONE ==="
 sleep 1
 
 # ==========================
-# CONFIG PYTHON 3.12
+# PYTHON VERSIONS
 # ==========================
-PYTHON_VER="3.12.2"
-PYTHON_PREFIX="$HOME/python312"
-VENV_DIR="$HOME/py312-env"
+PY310_VER="3.10.13"
+PY312_VER="3.12.2"
 
-echo "🚀 Setup Python $PYTHON_VER"
+PY310_PREFIX="$HOME/python310"
+PY312_PREFIX="$HOME/python312"
+
+VENV310="$HOME/py310-env"
+VENV312="$HOME/py312-env"
+
+echo "🚀 Setup Python 3.10 + Python 3.12"
 
 # ==========================
 # INSTALL BUILD DEPENDENCIES
@@ -41,73 +46,90 @@ xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev \
 libxml2-dev libxslt1-dev libncursesw5-dev
 
 # ==========================
-# BUILD PYTHON 3.12
+# FUNCTION: BUILD PYTHON
 # ==========================
-if [ ! -x "$PYTHON_PREFIX/bin/python3.12" ]; then
-    echo "🔨 Building Python 3.12..."
-    rm -rf "Python-$PYTHON_VER" "Python-$PYTHON_VER.tgz" || true
-    wget "https://www.python.org/ftp/python/$PYTHON_VER/Python-$PYTHON_VER.tgz"
-    tar -xf "Python-$PYTHON_VER.tgz"
-    cd "Python-$PYTHON_VER"
+build_python () {
+    local VER=$1
+    local PREFIX=$2
 
-    ./configure \
-        --prefix="$PYTHON_PREFIX" \
-        --enable-optimizations \
-        --with-ensurepip=install \
-        --enable-shared
+    if [ ! -x "$PREFIX/bin/python${VER%.*}" ]; then
+        echo "🔨 Building Python $VER..."
+        rm -rf "Python-$VER" "Python-$VER.tgz" || true
 
-    make -j$(nproc)
-    make install
-    cd ..
-else
-    echo "✔ Python 3.12 đã tồn tại — skip build."
-fi
+        wget "https://www.python.org/ftp/python/$VER/Python-$VER.tgz"
+        tar -xf "Python-$VER.tgz"
+        cd "Python-$VER"
 
-# ==========================
-# EXPORT PATH + LIB
-# ==========================
-export PATH="$PYTHON_PREFIX/bin:$PATH"
-export LD_LIBRARY_PATH="$PYTHON_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+        ./configure \
+            --prefix="$PREFIX" \
+            --enable-optimizations \
+            --with-ensurepip=install \
+            --enable-shared
 
-"$PYTHON_PREFIX/bin/python3.12" --version
+        make -j$(nproc)
+        make install
+        cd ..
+    else
+        echo "✔ Python $VER đã tồn tại — skip build."
+    fi
+}
 
 # ==========================
-# CREATE VENV
+# BUILD BOTH PYTHONS
 # ==========================
-rm -rf "$VENV_DIR" || true
-"$PYTHON_PREFIX/bin/python3.12" -m venv "$VENV_DIR"
-source "$VENV_DIR/bin/activate"
+build_python "$PY310_VER" "$PY310_PREFIX"
+build_python "$PY312_VER" "$PY312_PREFIX"
 
 # ==========================
-# INSTALL REQUIRED MODULES
+# FUNCTION: CREATE VENV + INSTALL MODULES
 # ==========================
-pip install --upgrade pip setuptools wheel
+setup_env () {
+    local PREFIX=$1
+    local VENV=$2
+    local BINPY="$PREFIX/bin/python${PREFIX##*python}${BINPY}"
 
-# FULL REQUESTS
-pip install "requests[security]" urllib3 certifi idna charset_normalizer
+    rm -rf "$VENV" || true
+    "$PREFIX/bin/python${PREFIX##*python}" -m venv "$VENV"
 
-# FIX: tomli REQUIRED FOR QEMU
-pip install tomli tomli_w
+    source "$VENV/bin/activate"
 
-echo "📦 Check tomli:"
-python3 - <<EOF
-import tomli
-print("tomli OK:", tomli.__version__)
-EOF
+    pip install --upgrade pip setuptools wheel
+    pip install "requests[security]" urllib3 certifi idna charset_normalizer
+    pip install tomli tomli_w
+
+    deactivate
+}
 
 # ==========================
-# AUTO FIX RUNPY.SH
+# SETUP ENV FOR BOTH
 # ==========================
-if [ -f "runpy.sh" ]; then
-cat > runpy.sh <<EOF
+setup_env "$PY310_PREFIX" "$VENV310"
+setup_env "$PY312_PREFIX" "$VENV312"
+
+# ==========================
+# MAKE runpy310.sh
+# ==========================
+cat > runpy310.sh <<EOF
 #!/bin/bash
-export PATH="$PYTHON_PREFIX/bin:\$PATH"
-export LD_LIBRARY_PATH="$PYTHON_PREFIX/lib:\$LD_LIBRARY_PATH"
-source "$VENV_DIR/bin/activate"
+export PATH="$PY310_PREFIX/bin:\$PATH"
+export LD_LIBRARY_PATH="$PY310_PREFIX/lib:\$LD_LIBRARY_PATH"
+source "$VENV310/bin/activate"
+python3.10 win.py
+EOF
+chmod +x runpy310.sh
+echo "⚡ Created runpy310.sh"
+
+# ==========================
+# MAKE runpy312.sh
+# ==========================
+cat > runpy312.sh <<EOF
+#!/bin/bash
+export PATH="$PY312_PREFIX/bin:\$PATH"
+export LD_LIBRARY_PATH="$PY312_PREFIX/lib:\$LD_LIBRARY_PATH"
+source "$VENV312/bin/activate"
 python3.12 win.py
 EOF
-chmod +x runpy.sh
-echo "⚡ Updated runpy.sh để luôn chạy Python 3.12."
-fi
+chmod +x runpy312.sh
+echo "⚡ Created runpy312.sh"
 
-echo "🎯 DONE – Python 3.12 + venv + requests + tomli FULL READY!"
+echo "🎯 DONE – Python 3.10 + 3.12 + 2 venv + requests + tomli fully installed!"
