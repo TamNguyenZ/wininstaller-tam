@@ -1,8 +1,3 @@
-#!/bin/bash
-set -euo pipefail
-
-# Kích hoạt venv Python 3.12
-source "$HOME/py312-env/bin/activate"
-
-# Chạy script win.py
-python "$HOME/win.py"
+export PATH="$HOME/python3.10/bin:$PATH" \
+&& export LD_LIBRARY_PATH="$HOME/python3.10/lib:$LD_LIBRARY_PATH" \
+&& "$HOME/python3.10/bin/python3.10" win.py
