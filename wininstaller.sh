@@ -32,67 +32,64 @@ VENV_DIR="$HOME/py312-env"
 # INSTALL BUILD DEPENDENCIES
 # ==========================
 sudo apt update -y
-sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev \
-libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget \
-xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev \
-libxml2-dev libxslt1-dev || true
+sudo apt install -y \
+    build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev \
+    libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget \
+    xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev \
+    libxml2-dev libxslt1-dev libncursesw5-dev libffi-dev liblzma-dev || true
 
 # ==========================
-# BUILD PYTHON 3.12 (KHÔNG BAO GIỜ LÀM SCRIPT DỪNG)
+# BUILD PYTHON 3.12
 # ==========================
 if [ ! -x "$PYTHON_PREFIX/bin/python3.12" ]; then
-    echo "=== ❌ Chưa có Python 3.12 → tiến hành build từ source ==="
-
+    echo "🚀 Bắt đầu build Python 3.12 từ source..."
     rm -rf "Python-$PYTHON_VER" "Python-$PYTHON_VER.tgz" || true
-    wget "https://www.python.org/ftp/python/$PYTHON_VER/Python-$PYTHON_VER.tgz" || true
-    tar -xf "Python-$PYTHON_VER.tgz" || true
-    cd "Python-$PYTHON_VER" || true
+    wget "https://www.python.org/ftp/python/$PYTHON_VER/Python-$PYTHON_VER.tgz"
+    tar -xf "Python-$PYTHON_VER.tgz"
+    cd "Python-$PYTHON_VER"
 
-    ./configure --prefix="$PYTHON_PREFIX" --enable-optimizations --with-ensurepip=install || true
-    make -j$(nproc) || true
-    make install || true
-
-    cd .. || true
-
-    echo "⚠️ Build Python có thể lỗi, nhưng script vẫn chạy tiếp."
+    ./configure --prefix="$PYTHON_PREFIX" --enable-optimizations --with-ensurepip=install --enable-shared
+    make -j$(nproc)
+    make install
+    cd ..
+    echo "✅ Build Python 3.12 xong!"
 else
-    echo "=== 🔍 Python 3.12 đã tồn tại, bỏ qua build ==="
+    echo "🔍 Python 3.12 đã tồn tại, bỏ qua build."
 fi
 
 # ==========================
-# CREATE VENV (KHÔNG STOP NẾU LỖI)
+# UPDATE PATH
+# ==========================
+export PATH="$PYTHON_PREFIX/bin:$PATH"
+if ! command -v python3.12 &>/dev/null; then
+    echo "❌ Python 3.12 vẫn chưa có trong PATH, kiểm tra lại!"
+    exit 1
+fi
+
+# ==========================
+# CREATE VENV
 # ==========================
 rm -rf "$VENV_DIR" || true
-"$PYTHON_PREFIX/bin/python3.12" -m venv "$VENV_DIR" || true
-
-# ACTIVATE VENV (NẾU TỒN TẠI)
-if [ -f "$VENV_DIR/bin/activate" ]; then
-    source "$VENV_DIR/bin/activate"
-else
-    echo "⚠️ Không tạo được venv, tiếp tục không cần venv."
-fi
+"$PYTHON_PREFIX/bin/python3.12" -m venv "$VENV_DIR"
+source "$VENV_DIR/bin/activate"
 
 # ==========================
-# UPGRADE PIP (KHÔNG STOP NẾU LỖI)
+# UPGRADE PIP
 # ==========================
-pip install --upgrade pip setuptools wheel tomli markdown packaging requests || true
+pip install --upgrade pip setuptools wheel tomli markdown packaging requests
 
+# ==========================
+# CHECK
+# ==========================
 echo "Python version:"
-python --version || echo "⚠️ Python không chạy được"
-pip --version || echo "⚠️ pip không chạy được"
+python --version
+echo "Pip version:"
+pip --version
 
 # ==========================
-# CÀI THÊM LIBS HỆ THỐNG
+# RUN PY SCRIPT
 # ==========================
-sudo apt update -y
-sudo apt install -y xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev libxml2-dev libxslt1-dev || true
-
-echo "🎉 Tất cả bước đã chạy xong — không quan trọng Python có lỗi hay không."
-
-# ==========================
-# LUÔN LUÔN CHẠY RUNPY.SH
-# ==========================
-echo "▶️ Đang chạy runpy.sh..."
+echo "▶️ Chạy runpy.sh..."
 bash runpy.sh || true
 
 echo "🎯 Hoàn tất toàn bộ!"
