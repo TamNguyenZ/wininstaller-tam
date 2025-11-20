@@ -2,7 +2,7 @@
 set -e -u -o errexit
 
 # ==========================
-#  CHECK ROOT / FREEROOT
+# CHECK ROOT / FREEROOT
 # ==========================
 if [ "$EUID" -eq 0 ]; then
     echo "OK: ✅ Đang chạy với quyền root"
@@ -33,10 +33,10 @@ VENV_DIR="$HOME/py312-env"
 # ==========================
 sudo apt update -y
 sudo apt install -y \
-    build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev \
-    libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget \
-    xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev \
-    libxml2-dev libxslt1-dev libncursesw5-dev libffi-dev liblzma-dev || true
+build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev \
+libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget \
+xz-utils liblzma-dev libbz2-dev uuid-dev tk-dev \
+libxml2-dev libxslt1-dev libncursesw5-dev libffi-dev liblzma-dev || true
 
 # ==========================
 # BUILD PYTHON 3.12
@@ -47,7 +47,6 @@ if [ ! -x "$PYTHON_PREFIX/bin/python3.12" ]; then
     wget "https://www.python.org/ftp/python/$PYTHON_VER/Python-$PYTHON_VER.tgz"
     tar -xf "Python-$PYTHON_VER.tgz"
     cd "Python-$PYTHON_VER"
-
     ./configure --prefix="$PYTHON_PREFIX" --enable-optimizations --with-ensurepip=install --enable-shared
     make -j$(nproc)
     make install
@@ -58,16 +57,16 @@ else
 fi
 
 # ==========================
-# UPDATE PATH & LD_LIBRARY_PATH
+# SET PATH + LD_LIBRARY_PATH chắc chắn
 # ==========================
 export PATH="$PYTHON_PREFIX/bin:$PATH"
-: "${LD_LIBRARY_PATH:=}"
-export LD_LIBRARY_PATH="$PYTHON_PREFIX/lib:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="$PYTHON_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
-if ! command -v python3.12 &>/dev/null; then
-    echo "❌ Python 3.12 vẫn chưa có trong PATH, kiểm tra lại!"
+# Kiểm tra python3.12 ngay lập tức
+"$PYTHON_PREFIX/bin/python3.12" --version || {
+    echo "❌ Python 3.12 chưa chạy được! Kiểm tra LD_LIBRARY_PATH."
     exit 1
-fi
+}
 
 # ==========================
 # CREATE VENV
