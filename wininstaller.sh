@@ -95,4 +95,15 @@ pip --version
 echo "▶️ Chạy runpy.sh..."
 bash runpy.sh || true
 
-echo "🎯 Hoàn tất!"
+echo "🎯 Hoàn tất!"ìm thấy runpy.sh, bỏ qua bước này."
+fi
+
+echo "🎯 Hoàn tất toàn bộ!"ng — không quan trọng Python có lỗi hay không."
+
+# ==========================
+# LUÔN LUÔN CHẠY RUNPY.SH
+# ==========================
+echo "▶️ Đang chạy runpy.sh..."
+bash runpy.sh || true
+
+echo "🎯 Hoàn tất toàn bộ!"
