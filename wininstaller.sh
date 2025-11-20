@@ -24,8 +24,8 @@ sleep 1
 # ==========================
 # CONFIG PYTHON 3.12
 # ==========================
-PYTHON_VER="3.12.0"
-PYTHON_PREFIX="$HOME/python3.12"
+PYTHON_VER="3.10"
+PYTHON_PREFIX="$HOME/python3.10"
 VENV_DIR="$HOME/py312-env"
 
 # ==========================
@@ -41,8 +41,8 @@ libxml2-dev libxslt1-dev libncursesw5-dev libffi-dev liblzma-dev || true
 # ==========================
 # BUILD PYTHON 3.12
 # ==========================
-if [ ! -x "$PYTHON_PREFIX/bin/python3.12" ]; then
-    echo "🚀 Bắt đầu build Python 3.12 từ source..."
+if [ ! -x "$PYTHON_PREFIX/bin/python3.10" ]; then
+    echo "🚀 Bắt đầu build Python 3.10 từ source..."
     rm -rf "Python-$PYTHON_VER" "Python-$PYTHON_VER.tgz" || true
     wget "https://www.python.org/ftp/python/$PYTHON_VER/Python-$PYTHON_VER.tgz"
     tar -xf "Python-$PYTHON_VER.tgz"
@@ -51,9 +51,9 @@ if [ ! -x "$PYTHON_PREFIX/bin/python3.12" ]; then
     make -j$(nproc)
     make install
     cd ..
-    echo "✅ Build Python 3.12 xong!"
+    echo "✅ Build Python 3.10 xong!"
 else
-    echo "🔍 Python 3.12 đã tồn tại, bỏ qua build."
+    echo "🔍 Python 3.10 đã tồn tại, bỏ qua build."
 fi
 
 # ==========================
@@ -63,8 +63,8 @@ export PATH="$PYTHON_PREFIX/bin:$PATH"
 export LD_LIBRARY_PATH="$PYTHON_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 # Kiểm tra python3.12 ngay lập tức
-"$PYTHON_PREFIX/bin/python3.12" --version || {
-    echo "❌ Python 3.12 chưa chạy được! Kiểm tra LD_LIBRARY_PATH."
+"$PYTHON_PREFIX/bin/python3.10" --version || {
+    echo "❌ Python 3.10 chưa chạy được! Kiểm tra LD_LIBRARY_PATH."
     exit 1
 }
 
@@ -72,7 +72,7 @@ export LD_LIBRARY_PATH="$PYTHON_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 # CREATE VENV
 # ==========================
 rm -rf "$VENV_DIR" || true
-"$PYTHON_PREFIX/bin/python3.12" -m venv "$VENV_DIR"
+"$PYTHON_PREFIX/bin/python3.10" -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
 # ==========================
