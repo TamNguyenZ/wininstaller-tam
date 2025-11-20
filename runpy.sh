@@ -1,3 +1,3 @@
-export PATH="$HOME/python3.10/bin:$PATH" \
-&& export LD_LIBRARY_PATH="$HOME/python3.10/lib:$LD_LIBRARY_PATH" \
-&& "$HOME/python3.10/bin/python3.10" win.py
+export PATH="$HOME/python3.12/bin:$PATH" \
+&& export LD_LIBRARY_PATH="$HOME/python3.12/lib:$LD_LIBRARY_PATH" \
+&& "$HOME/python3.12/bin/python3.12" win.py
