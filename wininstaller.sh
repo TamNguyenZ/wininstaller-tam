@@ -21,29 +21,29 @@ eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
 
 # ==========================
-# INSTALL PYTHON 3.10 + 3.12
+# INSTALL PYTHON 3.13 + 3.12
 # ==========================
-pyenv install -s 3.10.13
+pyenv install -s 3.13.0
 pyenv install -s 3.12.2
 
 # ==========================
 # CREATE VENV FOR BOTH
 # ==========================
-PYTHON10_PATH="$(pyenv prefix 3.10.13)/bin/python3.10"
+PYTHON13_PATH="$(pyenv prefix 3.13.0)/bin/python3.13"
 PYTHON12_PATH="$(pyenv prefix 3.12.2)/bin/python3.12"
 
-PYTHON10_VENV="$HOME/py310-env"
+PYTHON13_VENV="$HOME/py313-env"
 PYTHON12_VENV="$HOME/py312-env"
 
-rm -rf "$PYTHON10_VENV" "$PYTHON12_VENV"
+rm -rf "$PYTHON13_VENV" "$PYTHON12_VENV"
 
-$PYTHON10_PATH -m venv "$PYTHON10_VENV"
+$PYTHON13_PATH -m venv "$PYTHON13_VENV"
 $PYTHON12_PATH -m venv "$PYTHON12_VENV"
 
 # ==========================
 # INSTALL REQUESTS FULL
 # ==========================
-source "$PYTHON10_VENV/bin/activate"
+source "$PYTHON13_VENV/bin/activate"
 pip install --upgrade pip setuptools wheel
 pip install "requests[security]" urllib3 certifi idna charset_normalizer tomli
 deactivate
