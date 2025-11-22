@@ -1,2 +1,1 @@
 $ git clone https://github.com/TamNguyenZ/wininstaller-tam.git && cd wininstaller-tam && bash wininstaller.sh && bash runpy.sh
-$ python3.12 win.py
