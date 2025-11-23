@@ -10,5 +10,7 @@ New Features
 Fix Bugs
 ➕Fixed Python 3.10 , 3.13
 ➕Python now is faster for install
+Remove Features
+➖This Tool no longer use on no root host
 This tool helps you create a Windows VM on Linux Ubuntu/Debian with host configuration
 and build qemu with x3-x4 speed optimization default qemu ( no-kvm-require✅ )
