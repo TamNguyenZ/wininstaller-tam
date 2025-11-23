@@ -1,35 +1,33 @@
 #!/bin/bash
 set -euo pipefail
 
-# =========================
-# Cài dependencies
-# =========================
 sudo apt update -y
-sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev wget curl
+sudo apt install -y git build-essential libssl-dev zlib1g-dev \
+libncurses5-dev libffi-dev libsqlite3-dev libreadline-dev \
+libbz2-dev liblzma-dev tk-dev libgdbm-dev curl
 
-# =========================
-# Cài Python 3.13
-# =========================
-cd /tmp
-wget -q https://www.python.org/ftp/python/3.13.0/Python-3.13.0.tgz
-tar -xf Python-3.13.0.tgz
-cd Python-3.13.0
-./configure --enable-optimizations --prefix=/usr/local/python3.13
-make -j$(nproc)
-sudo make altinstall
+if [ ! -d "$HOME/.pyenv" ]; then
+    curl https://pyenv.run | bash
+fi
 
-# =========================
-# pip + tomli cho Python 3.13
-# =========================
-/usr/local/python3.13/bin/python3.13 -m ensurepip --upgrade
-/usr/local/python3.13/bin/python3.13 -m pip install --upgrade pip tomli
+export PATH="$HOME/.pyenv/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
 
-# =========================
-# Chạy win.py bằng Python 3.13
-# =========================
+pyenv install -s 3.13.0
+
+PYTHON13_PATH="$(pyenv prefix 3.13.0)/bin/python3.13"
+PYTHON13_VENV="$HOME/py313-env"
+rm -rf "$PYTHON13_VENV"
+$PYTHON13_PATH -m venv "$PYTHON13_VENV"
+
+"$PYTHON13_VENV/bin/pip" install --upgrade pip setuptools wheel
+"$PYTHON13_VENV/bin/pip" install tomli requests[security] urllib3 certifi idna charset_normalizer
+
 if [ -f "win.py" ]; then
-    echo "▶ Running win.py using Python 3.13..."
-    /usr/local/python3.13/bin/python3.13 win.py
+    echo "▶ Running win.py using Python 3.13 venv..."
+    "$PYTHON13_VENV/bin/python" win.py
 else
     echo "❌ win.py not found"
 fi
+
