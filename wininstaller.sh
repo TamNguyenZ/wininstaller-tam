@@ -1,42 +1,93 @@
 #!/bin/bash
 set -euo pipefail
 
+# ==========================
+# CONFIG
+# ==========================
+PY_VER="3.13.1"
+PREFIX="$HOME/python-$PY_VER"
+VENV_DIR="$HOME/py313-env"
+
+# ==========================
+# INSTALL BUILD DEPENDENCIES
+# ==========================
 sudo apt update -y
-sudo apt install -y git build-essential libssl-dev zlib1g-dev \
-libncurses5-dev libffi-dev libsqlite3-dev libreadline-dev \
-libbz2-dev liblzma-dev tk-dev libgdbm-dev curl
+sudo apt install -y \
+    build-essential \
+    zlib1g-dev \
+    libncurses5-dev \
+    libgdbm-dev \
+    libnss3-dev \
+    libssl-dev \
+    libreadline-dev \
+    libffi-dev \
+    libsqlite3-dev \
+    libbz2-dev \
+    liblzma-dev \
+    tk-dev \
+    uuid-dev \
+    wget \
+    libc6-dev \
+    libexpat1-dev
 
-if [ ! -d "$HOME/.pyenv" ]; then
-    curl https://pyenv.run | bash
-fi
+# ==========================
+# DOWNLOAD SOURCE
+# ==========================
+cd /tmp
+wget "https://www.python.org/ftp/python/$PY_VER/Python-$PY_VER.tgz"
+tar -xf "Python-$PY_VER.tgz"
+cd "Python-$PY_VER"
 
-export PATH="$HOME/.pyenv/bin:$PATH"
-eval "$(pyenv init --path)"
-eval "$(pyenv init -)"
+# ==========================
+# CONFIGURE + BUILD
+# ==========================
+./configure \
+  --prefix="$PREFIX" \
+  --enable-optimizations \
+  --with-lto \
+  --enable-ipv6 \
+  --enable-loadable-sqlite-extensions
 
-pyenv install -s 3.13.0
-pyenv install -s 3.12.2
+make -j"$(nproc)"
+make install
 
-PYTHON13_PATH="$(pyenv prefix 3.13.0)/bin/python3.13"
-PYTHON12_PATH="$(pyenv prefix 3.12.2)/bin/python3.12"
+# ==========================
+# CREATE VENV PY313
+# ==========================
+$PREFIX/bin/python3.13 -m venv "$VENV_DIR"
 
-PYTHON13_VENV="$HOME/py313-env"
-PYTHON12_VENV="$HOME/py312-env"
+source "$VENV_DIR/bin/activate"
 
-rm -rf "$PYTHON13_VENV" "$PYTHON12_VENV"
+# ==========================
+# UPGRADE PIP + INSTALL LIBS
+# ==========================
+pip install --upgrade pip setuptools wheel
 
-$PYTHON13_PATH -m venv "$PYTHON13_VENV"
-$PYTHON12_PATH -m venv "$PYTHON12_VENV"
+# FULL TOML SUPPORT: tomllib đã built-in Python 3.13
+pip install tomli
 
-for VENV in "$PYTHON13_VENV" "$PYTHON12_VENV"; do
-    source "$VENV/bin/activate"
-    pip install --upgrade pip setuptools wheel
-    pip install "requests[security]" urllib3 certifi idna charset_normalizer tomli
-    deactivate
-done
+# Mấy libs phổ biến
+pip install \
+    requests \
+    numpy \
+    rich \
+    pandas \
+    pillow \
+    psutil \
+    py-cpuinfo \
+    fastapi uvicorn \
+    tqdm \
+    colorama
 
-if [ -f "win.py" ]; then
-    "$PYTHON12_VENV/bin/python" win.py
-else
-    echo "❌ win.py not found"
-fi
+echo "========================================="
+echo "✔ DONE: Python 3.13 installed!"
+echo "✔ Prefix: $PREFIX"
+echo "✔ Venv:   $VENV_DIR"
+echo "✔ tomllib built-in + tomli installed"
+echo "========================================="
+
+# ==========================
+# RUN win.py
+# ==========================
+echo "▶ Running win.py..."
+python "$(dirname "$0")/win.py"
