@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-# ==========================
-# CONFIG
-# ==========================
+###########################################
+#                 CONFIG                  #
+###########################################
 PY313="3.13.1"
 PREFIX313="$HOME/python-$PY313"
 VENV313="$HOME/py313-env"
@@ -13,9 +13,9 @@ VENV312="$HOME/py312-env"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# ==========================
-# INSTALL DEPENDENCIES (BUILD 3.13)
-# ==========================
+###########################################
+#   INSTALL DEPENDENCIES (BUILD 3.13)     #
+###########################################
 sudo apt update -y
 sudo apt install -y \
     build-essential zlib1g-dev libncurses5-dev libgdbm-dev \
@@ -23,9 +23,9 @@ sudo apt install -y \
     libsqlite3-dev libbz2-dev liblzma-dev tk-dev uuid-dev \
     wget libc6-dev libexpat1-dev curl git
 
-# ==========================
-# BUILD PYTHON 3.13 (FULL)
-# ==========================
+###########################################
+#            BUILD PYTHON 3.13            #
+###########################################
 build_py313() {
     echo "▶ Building Python $PY313 ..."
 
@@ -52,9 +52,9 @@ else
     echo "✔ Python $PY313 đã build → skip"
 fi
 
-# ==========================
-# CREATE VENV 3.13
-# ==========================
+###########################################
+#        CREATE VENV 3.13 + PACKAGES      #
+###########################################
 rm -rf "$VENV313"
 "$PREFIX313/bin/python3.13" -m venv "$VENV313"
 
@@ -68,9 +68,9 @@ echo "✔ Python 3.13 build full OK"
 echo "✔ Venv: $VENV313"
 echo "=========================================="
 
-# ==========================
-# PYENV INSTALL PYTHON 3.12
-# ==========================
+###########################################
+#         INSTALL PYENV + PYTHON 3.12     #
+###########################################
 if [ ! -d "$HOME/.pyenv" ]; then
     echo "▶ Installing pyenv..."
     curl https://pyenv.run | bash
@@ -81,12 +81,18 @@ eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
 
 pyenv install -s "$PY312"
-
 PY312_PATH="$(pyenv prefix $PY312)/bin/python3.12"
 
-# ==========================
-# CREATE VENV 3.12 (FOR win.py)
-# ==========================
+###########################################
+#   >>> ADDED BY REQUEST: INSTALL REQUESTS
+###########################################
+#  Cài requests vào python3.12 global (pyenv)
+$HOME/.pyenv/versions/$PY312/bin/python3.12 -m pip install --upgrade pip
+$HOME/.pyenv/versions/$PY312/bin/python3.12 -m pip install requests
+
+###########################################
+#        CREATE VENV 3.12 (win.py)        #
+###########################################
 rm -rf "$VENV312"
 "$PY312_PATH" -m venv "$VENV312"
 
@@ -100,9 +106,9 @@ echo "✔ Python 3.12 (pyenv) ready"
 echo "✔ Venv: $VENV312"
 echo "=========================================="
 
-# ==========================
-# RUN win.py USING PYTHON 3.12
-# ==========================
+###########################################
+#           RUN win.py (3.12 venv)        #
+###########################################
 if [ -f "$SCRIPT_DIR/win.py" ]; then
     echo "▶ Running win.py with Python 3.12..."
     "$VENV312/bin/python" "$SCRIPT_DIR/win.py"
